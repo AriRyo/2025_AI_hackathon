@@ -20,16 +20,14 @@ class ChatResponse(BaseModel):
 @router.post("/", response_model=ChatResponse)
 async def chat_endpoint(chat_request: ChatRequest):
     try:
-        # OpenAI ChatCompletion API を呼び出す
-        response = openai.ChatCompletion.create(
+        response = openai.Chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[
                 {"role": "system", "content": "You are a helpful assistant."},
-                {"role": "user", "content": chat_request.message}
-            ]
+                {"role": "user", "content": chat_request.message},
+            ],
         )
-        reply_text = response["choices"][0]["message"]["content"].strip()
+        reply_text = response.choices[0].message.content.strip()
         return ChatResponse(reply=reply_text)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"OpenAI API error: {str(e)}")
-
