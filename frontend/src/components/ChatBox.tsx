@@ -1,10 +1,7 @@
 "use client";
 
-
-// src/components/ChatBox.tsx
 import React, { useState, FormEvent } from "react";
 
-// メッセージの型（簡単なサンプル）
 interface Message {
   id: number;
   sender: "user" | "bot";
@@ -14,10 +11,12 @@ interface Message {
 const ChatBox: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!inputText.trim()) return;
+
     // ユーザーのメッセージを追加
     const userMessage: Message = {
       id: Date.now(),
@@ -25,17 +24,44 @@ const ChatBox: React.FC = () => {
       text: inputText,
     };
     setMessages((prev) => [...prev, userMessage]);
-    
-    // ここで将来的に ChatGPT API 連携（バックエンド経由）の実装を追加する
-    // 暫定的に bot の返答を模倣
-    const botMessage: Message = {
-      id: Date.now() + 1,
-      sender: "bot",
-      text: "これはサンプルの返答です。",
-    };
-    setMessages((prev) => [...prev, botMessage]);
-    
-    setInputText("");
+    setLoading(true);
+
+    try {
+      // バックエンドの /chat エンドポイントに POST リクエストを送信
+      const response = await fetch("http://localhost:8000/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ message: inputText }),
+      });
+
+      if (!response.ok) {
+        throw new Error("ネットワークエラーが発生しました。");
+      }
+
+      const data = await response.json();
+
+      const botMessage: Message = {
+        id: Date.now() + 1,
+        sender: "bot",
+        text: data.reply || "返答がありません。",
+      };
+
+      setMessages((prev) => [...prev, botMessage]);
+    } catch (error) {
+      console.error(error);
+      // エラー時のメッセージ表示
+      const errorMessage: Message = {
+        id: Date.now() + 1,
+        sender: "bot",
+        text: "エラーが発生しました。",
+      };
+      setMessages((prev) => [...prev, errorMessage]);
+    } finally {
+      setInputText("");
+      setLoading(false);
+    }
   };
 
   return (
@@ -45,12 +71,15 @@ const ChatBox: React.FC = () => {
           <div
             key={msg.id}
             className={`my-2 p-2 rounded ${
-              msg.sender === "user" ? "bg-blue-100 text-right" : "bg-gray-200 text-left"
+              msg.sender === "user"
+                ? "bg-blue-100 text-right"
+                : "bg-gray-200 text-left"
             }`}
           >
             {msg.text}
           </div>
         ))}
+        {loading && <div className="text-center">読み込み中...</div>}
       </div>
       <form onSubmit={handleSubmit} className="flex">
         <input
@@ -60,7 +89,11 @@ const ChatBox: React.FC = () => {
           placeholder="メッセージを入力..."
           className="flex-1 p-2 border rounded-l focus:outline-none"
         />
-        <button type="submit" className="p-2 bg-blue-500 text-white rounded-r">
+        <button
+          type="submit"
+          className="p-2 bg-blue-500 text-white rounded-r"
+          disabled={loading}
+        >
           送信
         </button>
       </form>
