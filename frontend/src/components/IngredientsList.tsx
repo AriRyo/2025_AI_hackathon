@@ -3,6 +3,8 @@ import { IngredientModal } from './IngredientModal';
 
 interface IngredientsListProps {
   ingredients: string[];
+  ingredientAffinity: { [key: string]: number };
+  setIngredientAffinity: (affinity: { [key: string]: number }) => void;
 }
 
 // 食材名と画像の対応表
@@ -14,7 +16,11 @@ const ingredientImages: { [key: string]: string } = {
   '赤パプリカ': '/images/red_pepper.png',
 };
 
-export const IngredientsList = ({ ingredients }: IngredientsListProps) => {
+export const IngredientsList = ({ 
+  ingredients, 
+  ingredientAffinity, 
+  setIngredientAffinity 
+}: IngredientsListProps) => {
   const [selectedIngredient, setSelectedIngredient] = useState<string | null>(null);
 
   const handleCardClick = (ingredient: string) => {
@@ -23,6 +29,20 @@ export const IngredientsList = ({ ingredients }: IngredientsListProps) => {
 
   const handleCloseModal = () => {
     setSelectedIngredient(null);
+  };
+
+  const handleAffinityChange = (ingredient: string, newAffinity: number) => {
+    setIngredientAffinity({
+      ...ingredientAffinity,
+      [ingredient]: newAffinity
+    });
+  };
+
+  const renderHearts = (ingredient: string) => {
+    const affinity = ingredientAffinity[ingredient] || 0;
+    return Array.from({ length: affinity }, (_, i) => (
+      <span key={i} className="text-red-500 text-xl">❤️</span>
+    ));
   };
 
   return (
@@ -43,6 +63,9 @@ export const IngredientsList = ({ ingredients }: IngredientsListProps) => {
               />
             </div>
             <span className="text-gray-700 font-medium text-center">{ingredient}</span>
+            <div className="flex gap-1 mt-2">
+              {renderHearts(ingredient)}
+            </div>
           </div>
         ))}
       </div>
@@ -53,6 +76,8 @@ export const IngredientsList = ({ ingredients }: IngredientsListProps) => {
           onClose={handleCloseModal}
           ingredient={selectedIngredient}
           imagePath={ingredientImages[selectedIngredient] || '/images/default.png'}
+          affinity={ingredientAffinity[selectedIngredient] || 0}
+          onAffinityChange={(newAffinity) => handleAffinityChange(selectedIngredient, newAffinity)}
         />
       )}
     </div>
