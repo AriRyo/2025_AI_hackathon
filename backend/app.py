@@ -7,6 +7,7 @@ import mimetypes
 from io import BytesIO
 from pathlib import Path
 import json
+import re
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, UploadFile, File
@@ -64,6 +65,78 @@ class IngredientInfo(BaseModel):
 class IngredientList(BaseModel):
     ingredients: list[str]
 
+# ───────────────────────────────────────────────
+# 原材料リストの取得
+# ───────────────────────────────────────────────
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+IMAGE_DIR = os.path.join(BASE_DIR, "images_for_hackthon")
+
+# 原材料画像ファイル名一覧を ingredient_list に格納
+ingredient_list = [
+    os.path.splitext(filename)[0]
+    for filename in os.listdir(IMAGE_DIR)
+    if filename.lower().endswith("png")
+]
+
+# ───────────────────────────────────────────────
+# 原材料抽出関数
+# ───────────────────────────────────────────────
+def extract_ingredients_from_response(response_text: str) -> list[str]:
+    if not response_text:
+        return []
+
+    # "原材料:" のセクションを探す
+    match_section = re.search(r"原材料:(.*)", response_text, re.IGNORECASE | re.DOTALL)
+
+    if match_section:
+        ingredient_text_block = match_section.group(1).strip()
+        found_items = re.findall(r"^\s*-\s*(.+)", ingredient_text_block, re.MULTILINE)
+        ingredients = [item.strip() for item in found_items]
+
+    return ingredients
+
+async def filter_ingredients_with_ai(
+    ai_extracted_ingredients: list[str],
+    allowed_ingredients: list[str],
+) -> list[str]:
+    if not ai_extracted_ingredients:
+        return []
+
+    allowed_ingredients_str = ", ".join(allowed_ingredients)
+    ai_ingredients_str = "\n".join([f"- {item}" for item in ai_extracted_ingredients])
+
+    prompt = f"""以下の「抽出された原材料リスト」にある各項目について、下記の「許可された原材料リスト」に含まれる項目と実質的に同じものを指しているか判定してください。
+    判定の結果、一致すると判断された「許可された原材料リスト」中の項目名だけを、カンマ区切りで一行で出力してください。重複は含めないでください。
+
+    抽出された原材料リスト:
+    {ai_ingredients_str}
+
+    許可された原材料リスト:
+    [{allowed_ingredients_str}]
+
+    出力例: 豚肉, ピーマン, 玉ねぎ
+    """
+
+    response = await client.chat.completions.create(
+        model="gpt-4",
+        messages=[
+            {
+                "role": "user",
+                "content": prompt
+            }
+        ],
+        max_tokens=len(allowed_ingredients) * 10,
+        temperature=0.1
+    )
+
+    filtered_result_text = response.choices[0].message.content.strip()
+    
+    final_ingredients = [
+        item.strip() for item in filtered_result_text.split(',')
+        if item.strip() and item.strip() in allowed_ingredients
+    ]
+    return sorted(list(set(final_ingredients)))
+
 @app.post("/analyze-dish", response_model=DishAnalysisResponse)
 async def analyze_dish(image: UploadFile = File(...)):
     try:
@@ -87,7 +160,7 @@ async def analyze_dish(image: UploadFile = File(...)):
 ..."""
 
         response = await client.chat.completions.create(
-            model="gpt-4o",
+            model="gpt-4-vision-preview",
             messages=[
                 {
                     "role": "user",
@@ -111,16 +184,14 @@ async def analyze_dish(image: UploadFile = File(...)):
         lines = content.split('\n')
         
         dish_name = lines[0].replace('料理名:', '').strip()
-        ingredients = []
         
-        for line in lines[1:]:
-            if line.strip().startswith('-'):
-                ingredient = line.strip('- ').strip()
-                ingredients.append(ingredient)
+        # 原材料の抽出とフィルタリング
+        extracted_ingredients = extract_ingredients_from_response(content)
+        filtered_ingredients = await filter_ingredients_with_ai(extracted_ingredients, ingredient_list)
 
         return DishAnalysisResponse(
             dish_name=dish_name,
-            ingredients=ingredients
+            ingredients=filtered_ingredients
         )
 
     except Exception as e:
