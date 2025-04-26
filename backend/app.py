@@ -220,11 +220,21 @@ async def explain_ingredients(ingredient_list: IngredientList):
             messages=[
                 {
                     "role": "system",
-                    "content": "あなたは料理の専門家です。食材について豊富な知識を持ち食材の育て方や産地なども詳しいです。"
+                    "content": """あなたは料理の専門家です。食材について豊富な知識を持ち食材の育て方や産地なども詳しいです。
+以下の形式のJSONで応答してください：
+{
+    "ingredients": [
+        {
+            "食材の名前": "食材名",
+            "食材の育った環境": "環境の説明",
+            "食材の豆知識": "豆知識の説明"
+        }
+    ]
+}"""
                 },
                 {
                     "role": "user",
-                    "content": f"{ingredient_list.ingredients}上記の食材についてそれぞれの食材ごとに食材が育った環境と食材の豆知識をそれぞれ一文ずつ程度で教えてください。"
+                    "content": f"{ingredient_list.ingredients}上記の食材についてそれぞれの食材ごとに食材が育った環境と食材の豆知識をそれぞれ一文ずつ程度で教えてください。なるべく面白いものを出してください。"
                 }
             ],
             response_format={"type": "json_object"}
@@ -234,7 +244,10 @@ async def explain_ingredients(ingredient_list: IngredientList):
         content = response.choices[0].message.content
         try:
             parsed_response = json.loads(content)
-            return [IngredientInfo(**item) for item in parsed_response]
+            if "ingredients" in parsed_response:
+                return [IngredientInfo(**item) for item in parsed_response["ingredients"]]
+            else:
+                raise HTTPException(status_code=500, detail="APIからの応答の形式が不正です")
         except json.JSONDecodeError:
             raise HTTPException(status_code=500, detail="APIからの応答の解析に失敗しました")
 
