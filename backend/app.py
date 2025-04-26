@@ -68,15 +68,28 @@ class IngredientList(BaseModel):
 # ───────────────────────────────────────────────
 # 原材料リストの取得
 # ───────────────────────────────────────────────
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-IMAGE_DIR = os.path.join(BASE_DIR, "images_for_hackthon")
-
-# 原材料画像ファイル名一覧を ingredient_list に格納
 ingredient_list = [
-    os.path.splitext(filename)[0]
-    for filename in os.listdir(IMAGE_DIR)
-    if filename.lower().endswith("png")
-]
+ # Grains & Carbohydrates
+ "Rice", "Bread", "Wheat", "Potato", "Sweet potato", "Corn",
+ # Vegetables
+ "Cabbage", "Lettuce", "Chinese Cabbage", "Spinach", "Japanese Mustard Spinach", "Daikon Radish", "Carrot", "Burdock Root", "Lotus Root", "Tomato", "Cucumber", "Eggplant", "Green Pepper", "Paprika", "Pumpkin", "Onion", "Green Onion", "Garlic", "Broccoli", "Cauliflower", "Asparagus", "Mushrooms",
+ # Fruits
+ "Apple", "Orange", "Banana", "Strawberry", "Grape", "Peach", "Kiwi", "Lemon",
+# Meats
+ "Chicken", "Pork", "Beef",
+ # Seafood
+ "Salmon", "Tuna", "Mackerel", "Shrimp", "Crab", "Squid", "Octopus",
+ # Legumes & Nuts
+"Soybeans",
+ # Dairy
+"Milk", "Cheese", "Yogurt",
+ # Eggs
+ "Egg",
+ # Herbs & Spices
+"Ginger", "Garlic", "Chili Pepper", "Basil",
+ # Other
+ "Seaweed", "Konjac" ]
+
 
 # ───────────────────────────────────────────────
 # 原材料抽出関数
@@ -130,7 +143,7 @@ async def filter_ingredients_with_ai(
     )
 
     filtered_result_text = response.choices[0].message.content.strip()
-    
+
     final_ingredients = [
         item.strip() for item in filtered_result_text.split(',')
         if item.strip() and item.strip() in allowed_ingredients
@@ -142,7 +155,7 @@ async def analyze_dish(image: UploadFile = File(...)):
     try:
         # 画像を読み込んでbase64エンコード
         image_data = await image.read()
-        
+
         # base64エンコード
         encoded = base64.b64encode(image_data).decode("utf-8")
         base64_image = f"data:image/jpeg;base64,{encoded}"
@@ -182,9 +195,9 @@ async def analyze_dish(image: UploadFile = File(...)):
         # レスポンスの解析
         content = response.choices[0].message.content.strip()
         lines = content.split('\n')
-        
+
         dish_name = lines[0].replace('料理名:', '').strip()
-        
+
         # 原材料の抽出とフィルタリング
         extracted_ingredients = extract_ingredients_from_response(content)
         filtered_ingredients = await filter_ingredients_with_ai(extracted_ingredients, ingredient_list)
