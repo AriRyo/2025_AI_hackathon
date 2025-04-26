@@ -70,9 +70,9 @@ class IngredientList(BaseModel):
 # ───────────────────────────────────────────────
 ingredient_list = [
  # Grains & Carbohydrates
- "Rice", "Bread", "Wheat", "Potato", "Sweet potato", "Corn",
+ "Rice", "Bread", "Wheat", "Potato", "Sweet_potato", "Corn",
  # Vegetables
- "Cabbage", "Lettuce", "Chinese Cabbage", "Spinach", "Japanese Mustard Spinach", "Daikon Radish", "Carrot", "Burdock Root", "Lotus Root", "Tomato", "Cucumber", "Eggplant", "Green Pepper", "Paprika", "Pumpkin", "Onion", "Green Onion", "Garlic", "Broccoli", "Cauliflower", "Asparagus", "Mushrooms",
+ "Cabbage", "Lettuce", "Chinese_Cabbage", "Spinach", "Japanese_Mustard_Spinach", "Daikon_Radish", "Carrot", "Burdock_Root", "Lotus_Root", "Tomato", "Cucumber", "Eggplant", "Green_Pepper", "Paprika", "Pumpkin", "Onion", "Green_Onion", "Garlic", "Broccoli", "Cauliflower", "Asparagus", "Mushrooms",
  # Fruits
  "Apple", "Orange", "Banana", "Strawberry", "Grape", "Peach", "Kiwi", "Lemon",
 # Meats
@@ -86,9 +86,10 @@ ingredient_list = [
  # Eggs
  "Egg",
  # Herbs & Spices
-"Ginger", "Garlic", "Chili Pepper", "Basil",
+"Ginger", "Garlic", "Chili_Pepper", "Basil",
  # Other
  "Seaweed", "Konjac" ]
+
 
 
 # ───────────────────────────────────────────────
@@ -173,7 +174,7 @@ async def analyze_dish(image: UploadFile = File(...)):
 ..."""
 
         response = await client.chat.completions.create(
-            model="gpt-4-vision-preview",
+            model="gpt-4o",
             messages=[
                 {
                     "role": "user",
