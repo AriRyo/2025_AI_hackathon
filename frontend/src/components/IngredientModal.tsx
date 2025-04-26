@@ -48,7 +48,7 @@ export const IngredientModal = ({
           
         <div className="space-y-6">
           <div>
-            <h3 className="text-xl font-semibold text-gray-700 mb-3">食材情報</h3>
+            <h3 className="text-xl font-semibold text-gray-700 mb-3">食材の育った環境</h3>
             <p className="text-gray-600 leading-relaxed">
               この食材は、料理の重要な材料として使用されています。
               新鮮なものを選び、適切に保存することが大切です。
@@ -56,7 +56,7 @@ export const IngredientModal = ({
           </div>
             
           <div>
-            <h3 className="text-xl font-semibold text-gray-700 mb-3">保存方法</h3>
+            <h3 className="text-xl font-semibold text-gray-700 mb-3">食材の豆知識</h3>
             <p className="text-gray-600 leading-relaxed">
               冷蔵庫で保存し、早めに使用することをお勧めします。
               適切な温度管理と湿度管理が重要です。

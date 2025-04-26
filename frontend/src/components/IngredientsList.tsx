@@ -7,15 +7,6 @@ interface IngredientsListProps {
   setIngredientAffinity: (affinity: { [key: string]: number }) => void;
 }
 
-// 食材名と画像の対応表
-const ingredientImages: { [key: string]: string } = {
-  '豚肉': '/images/pork.png',
-  '人参': '/images/carrot.png',
-  'ピーマン': '/images/pepper.png',
-  '玉ねぎ': '/images/onion.png',
-  '赤パプリカ': '/images/red_pepper.png',
-};
-
 export const IngredientsList = ({ 
   ingredients, 
   ingredientAffinity, 
@@ -57,9 +48,12 @@ export const IngredientsList = ({
           >
             <div className="w-24 h-24 mb-2 relative">
               <img
-                src={ingredientImages[ingredient] || '/images/default.png'}
+                src={`/images/${ingredient}.jpg`}
                 alt={ingredient}
                 className="w-full h-full object-contain"
+                onError={(e) => {
+                  e.currentTarget.src = '/images/default.jpg';
+                }}
               />
             </div>
             <span className="text-gray-700 font-medium text-center">{ingredient}</span>
@@ -75,7 +69,7 @@ export const IngredientsList = ({
           isOpen={true}
           onClose={handleCloseModal}
           ingredient={selectedIngredient}
-          imagePath={ingredientImages[selectedIngredient] || '/images/default.png'}
+          imagePath={`/images/${selectedIngredient}.jpg`}
           affinity={ingredientAffinity[selectedIngredient] || 0}
           onAffinityChange={(newAffinity) => handleAffinityChange(selectedIngredient, newAffinity)}
         />
