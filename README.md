@@ -2,8 +2,9 @@
 
 食材認識アプリは、AI（GPT-4o）を活用して料理画像から使用されている食材を自動的に認識し、それぞれの食材に関する情報を提供するウェブアプリケーションです。
 
-![食材認識アプリ1](https://github.com/AriRyo/2025_AI_hackathon/frontend/public/screenshot1.png)
-![食材認識アプリ2](https://github.com/AriRyo/2025_AI_hackathon/frontend/public/screenshot2.png)
+![食材認識アプリ1](frontend/public/screenshot1.png)
+![食材認識アプリ2](frontend/public/screenshot2.png)
+![食材認識アプリ3](frontend/public/screenshot3.png)
 
 ## 機能 (Features)
 
